@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>Daily Files Analysis</h1>
+    </header>
+
+
+    <div class="split left">
+        <div class="centered">
+             <div class="chartBox">
+                <canvas id="myChart"></canvas>
+              </div>
+
+              <input type="file" id="uploadfile" accept=".csv">
+              <button id="uploadconfirm">Upload File</button>
+              <button onclick="updateChart('Show details')">Show Details</button>
+        </div>
+      </div>
+    
+
+      
+
+      <div class="split right">
+        <div class="centered">
+            <div class="tableBox">
+            <table id="table"></table>
+            </div>
+        </div>
+      </div>
+      
+     
+
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+      
+      <script>
+
+       window.onload = () =>{
+        //File reader + HTML Elements
+        var reader = new FileReader(),
+        picker = document.getElementById("uploadfile");
+        table = document.getElementById("table");
+
+
+        //Read CSV on file pick
+        picker.onchange = () => reader.readAsText(picker.files[0]);
+
+        //Read the CSV file & generate the HTML
+        reader.onloadend = () => {
+            //Entire CSV File
+            let csv = reader.result;
+            
+            //clear HTML table
+            table.innerHTML = "";
+
+            //SPLIT INTO ROWS
+            let rows = csv.split("\r\n");
+
+            //LOOP through rows + SPLIT columns
+            for(let row of rows){
+                let cols = row.match(/(?:\"([^\"]*(?:\"\"[^\"]*)*)\")|([^\",]+)/g);
+                if(cols != null)
+                {
+                    let tr = table.insertRow();
+                    for(let col of cols)
+                    {
+                        let td = tr.insertCell();
+                        td.innerHTML = col.replace(/(^"|"$)/g, "");
+                    }
+                }
+            }
+        }
+
+
+        
+       }
+
+
+
+
+
+        //setup
+            const data = {
+                labels: [],
+            datasets: [{
+              label: '# of Votes',
+              data: [],
+              borderWidth: 1,
+              yAxisID: 'y'
+            }]
+            };
+        //config
+           const config = {
+            type: 'line',
+          data,
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            }
+          }
+           };
+        //render init
+
+        const myChart = new Chart(
+            document.getElementById('myChart'),
+            config
+        );
+
+        //Papa Parse
+        const Date1 = [];
+        const Count = [];
+        const labels = [];
+        const uploadconfirm = document.getElementById('uploadconfirm').addEventListener('click',
+        () =>{
+            alert("Success");
+            Papa.parse(document.getElementById('uploadfile').files[0],
+            {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results){
+                    for(i =0; i<results.data.length; i++)
+                    {
+                        Date1.push(results.data[i].Date);
+                        Count.push(results.data[i].Count);
+                        labels.push(results.data[i].Date);
+
+                    }
+                    console.log(Date1);
+                    console.log(Count);
+                    console.log(labels);
+                }
+            });
+        });
+
+        function updateChart(label)
+        {
+            myChart.data.labels = labels;
+            myChart.data.datasets[0].label = label;
+            myChart.data.datasets[0].data = Count;
+            if(label === 'Date1')
+            {
+                myChart.data.datasets[0].data = Date;
+            }
+            
+             console.log(label);
+             myChart.update();
+        }
+
+
+         
+        
+      </script>
+</body>
+</html>
